@@ -34,23 +34,65 @@ function abrirSolver() {
 }
 
 function prepararExpresion(expr) {
-    return expr
-        .replace(/\s+/g, "")
-        .replaceAll("^", "**")
-        .replaceAll("sin", "Math.sin")
-        .replaceAll("cos", "Math.cos")
-        .replaceAll("tan", "Math.tan")
-        .replaceAll("sqrt", "Math.sqrt")
-        .replaceAll("log", "Math.log")
-        .replaceAll("exp", "Math.exp")
-        .replaceAll("abs", "Math.abs")
-        .replaceAll("pi", "Math.PI")
-        .replaceAll("e", "Math.E");
+    let e = expr.replace(/\s+/g, "");
+
+    // Reemplazar constantes primero (antes de renombrar funciones)
+    e = e.replace(/\bpi\b/g, "Math.PI");
+    // Reemplazar 'e' solo cuando está sola (no dentro de palabras como "exp", "sec", etc.)
+    e = e.replace(/(?<![a-zA-Z])e(?![a-zA-Z])/g, "Math.E");
+
+    // Reemplazar funciones matemáticas (orden importa: más largas primero)
+    e = e.replace(/\basin\b/g, "Math.asin");
+    e = e.replace(/\bacos\b/g, "Math.acos");
+    e = e.replace(/\batan\b/g, "Math.atan");
+    e = e.replace(/\bsinh\b/g, "Math.sinh");
+    e = e.replace(/\bcosh\b/g, "Math.cosh");
+    e = e.replace(/\btanh\b/g, "Math.tanh");
+    e = e.replace(/\bsin\b/g, "Math.sin");
+    e = e.replace(/\bcos\b/g, "Math.cos");
+    e = e.replace(/\btan\b/g, "Math.tan");
+    e = e.replace(/\bsqrt\b/g, "Math.sqrt");
+    e = e.replace(/\babs\b/g, "Math.abs");
+    e = e.replace(/\bexp\b/g, "Math.exp");
+    e = e.replace(/\blog10\b/g, "Math.log10");
+    e = e.replace(/\blog2\b/g, "Math.log2");
+    e = e.replace(/\blog\b/g, "Math.log");   // ln natural
+    e = e.replace(/\bln\b/g, "Math.log");
+    e = e.replace(/\bcbrt\b/g, "Math.cbrt");
+    e = e.replace(/\bsign\b/g, "Math.sign");
+    e = e.replace(/\bfloor\b/g, "Math.floor");
+    e = e.replace(/\bceil\b/g, "Math.ceil");
+    e = e.replace(/\bround\b/g, "Math.round");
+
+    // Multiplicación implícita: número seguido de x  →  número*x
+    // Ej: 2x → 2*x,  3.5x → 3.5*x
+    e = e.replace(/(\d+\.?\d*)(x)/g, "$1*$2");
+
+    // Multiplicación implícita: número seguido de (  →  número*(
+    // Ej: 2(x+1) → 2*(x+1)
+    e = e.replace(/(\d+\.?\d*)(\()/g, "$1*$2");
+
+    // Multiplicación implícita: ) seguido de x  →  )*x
+    // Ej: (x+1)x → (x+1)*x
+    e = e.replace(/(\))(x)/g, "$1*$2");
+
+    // Multiplicación implícita: x seguido de (  →  x*(
+    // Ej: x(x+1) → x*(x+1)
+    e = e.replace(/(x)(\()/g, "$1*$2");
+
+    // Convertir potencias: ^ → **
+    e = e.replace(/\^/g, "**");
+
+    return e;
 }
 
 function evaluarFuncion(expr, x) {
     const expresion = prepararExpresion(expr);
-    return Function("x", `return ${expresion}`)(x);
+    try {
+        return Function("x", `return ${expresion}`)(x);
+    } catch (err) {
+        throw new Error(`Error al evaluar la expresión: "${expr}"\nExpresión procesada: "${expresion}"\n${err.message}`);
+    }
 }
 
 function calcularNewton() {
@@ -91,17 +133,17 @@ function calcularNewton() {
             fx = evaluarFuncion(funcion, xi);
             dfx = evaluarFuncion(derivada, xi);
         } catch (e) {
-            alert("La función o la derivada tienen un formato no válido.");
+            alert("La función o la derivada tienen un formato no válido.\n\n" + e.message);
             return;
         }
 
         if (!isFinite(fx) || !isFinite(dfx)) {
-            alert("La función ingresada produce valores no válidos.");
+            alert("La función ingresada produce valores no válidos (infinito o NaN) en x = " + xi.toFixed(6));
             return;
         }
 
         if (Math.abs(dfx) < 1e-12) {
-            alert("La derivada es cero o muy cercana a cero. No se puede continuar.");
+            alert("La derivada es cero o muy cercana a cero en x = " + xi.toFixed(6) + ". No se puede continuar.");
             return;
         }
 
