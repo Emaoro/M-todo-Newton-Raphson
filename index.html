@@ -1,11 +1,11 @@
 <!DOCTYPE html>
 <html lang="es">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>Newton-Raphson Solver</title>
 
-    <link rel="stylesheet" href="style.css">
+    <link rel="stylesheet" href="style.css" />
 
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/chartjs-plugin-zoom@2.0.1/dist/chartjs-plugin-zoom.min.js"></script>
@@ -14,6 +14,7 @@
 
 <div class="app">
 
+    <!-- SIDEBAR -->
     <aside class="sidebar">
         <div class="brand">
             <div class="brand-logo">N</div>
@@ -32,10 +33,13 @@
         <div class="side-card">
             <div class="side-icon">▦</div>
             <h3>Newton-Raphson</h3>
-            <p>Aplicación educativa para encontrar raíces de funciones no lineales.</p>
+            <p>
+                Aplicación educativa para encontrar raíces de funciones no lineales.
+            </p>
         </div>
     </aside>
 
+    <!-- MAIN -->
     <main class="main">
 
         <header class="topbar">
@@ -76,7 +80,7 @@
                         <h3>Resultado paso a paso</h3>
                         <p>
                             La aplicación muestra la tabla de iteraciones, el error,
-                            la raíz aproximada y la gráfica de la función.
+                            la raíz aproximada, la gráfica y el desarrollo del cálculo.
                         </p>
                     </div>
                 </div>
@@ -93,34 +97,36 @@
                     </div>
 
                     <p>
-                        Al finalizar, muestra si el método logró converger según la tolerancia ingresada.
+                        Al finalizar, la aplicación muestra si el método logró converger
+                        de acuerdo con la tolerancia ingresada.
                     </p>
                 </div>
             </div>
         </section>
 
-        <!-- RESOLVER -->
+        <!-- SOLVER -->
         <section id="solver" class="section">
 
             <div class="dashboard">
 
+                <!-- DATOS -->
                 <div class="card input-card">
                     <h3>▧ Datos de entrada</h3>
 
-                    <label>Función f(x)</label>
-                    <input type="text" id="funcion" value="x^3 - x - 2">
+                    <label for="funcion">Función f(x)</label>
+                    <input type="text" id="funcion" value="cos(x) - x" />
 
-                    <label>Derivada f'(x)</label>
-                    <input type="text" id="derivada" value="3*x^2 - 1">
+                    <label for="derivada">Derivada f'(x)</label>
+                    <input type="text" id="derivada" value="-sin(x) - 1" />
 
-                    <label>Valor inicial x₀</label>
-                    <input type="number" id="x0" value="1.5" step="any">
+                    <label for="x0">Valor inicial x₀</label>
+                    <input type="number" id="x0" value="0.5" step="any" />
 
-                    <label>Tolerancia ε</label>
-                    <input type="number" id="tolerancia" value="0.00001" step="any">
+                    <label for="tolerancia">Tolerancia ε</label>
+                    <input type="number" id="tolerancia" value="0.00001" step="any" />
 
-                    <label>Máximo de iteraciones</label>
-                    <input type="number" id="iteraciones" value="25">
+                    <label for="iteraciones">Máximo de iteraciones</label>
+                    <input type="number" id="iteraciones" value="25" />
 
                     <button class="btn-primary" onclick="calcularNewton()">▶ Calcular</button>
 
@@ -130,12 +136,13 @@
                     </div>
                 </div>
 
+                <!-- GRAFICA -->
                 <div class="card graph-card">
                     <div class="card-title-row">
                         <h3>⌁ Gráfica de la función</h3>
 
                         <div class="graph-actions">
-                            <span id="funcionLabel">f(x) = x^3 - x - 2</span>
+                            <span id="funcionLabel">f(x) = cos(x) - x</span>
                             <button onclick="resetearGrafica()">Restablecer vista</button>
                         </div>
                     </div>
@@ -153,6 +160,7 @@
                     </div>
                 </div>
 
+                <!-- COLUMNA DERECHA -->
                 <div class="right-column">
 
                     <div class="card result-card">
@@ -190,32 +198,49 @@
 
                 </div>
 
+                <!-- TABLA -->
                 <div class="card table-card">
                     <h3>▤ Iteraciones Newton-Raphson</h3>
 
-                    <table>
-                        <thead>
-                        <tr>
-                            <th>Iteración</th>
-                            <th>xᵢ</th>
-                            <th>f(xᵢ)</th>
-                            <th>f'(xᵢ)</th>
-                            <th>xᵢ₊₁</th>
-                            <th>Error</th>
-                        </tr>
-                        </thead>
-                        <tbody id="tablaNewton"></tbody>
-                    </table>
+                    <div class="table-wrapper">
+                        <table>
+                            <thead>
+                            <tr>
+                                <th>Iteración</th>
+                                <th>xᵢ</th>
+                                <th>f(xᵢ)</th>
+                                <th>f'(xᵢ)</th>
+                                <th>xᵢ₊₁</th>
+                                <th>Error</th>
+                            </tr>
+                            </thead>
+                            <tbody id="tablaNewton"></tbody>
+                        </table>
+                    </div>
 
                     <div class="success-box" id="mensajeTablaNewton">
                         ★ Esperando cálculo.
                     </div>
                 </div>
 
+                <!-- PASO A PASO -->
+                <div class="card steps-card">
+                    <h3>🧾 Paso a paso del cálculo</h3>
+                    <p class="steps-intro">
+                        En este apartado se muestra cómo se aplicó la fórmula de Newton-Raphson en cada iteración.
+                    </p>
+
+                    <div id="pasosNewton" class="steps-grid">
+                        <div class="step-empty">
+                            Presiona <b>Calcular</b> para ver el desarrollo paso a paso.
+                        </div>
+                    </div>
+                </div>
+
             </div>
         </section>
 
-        <!-- INFORMACIÓN -->
+        <!-- INFO -->
         <section id="info" class="section">
             <div class="welcome-card">
                 <h2>Información del proyecto</h2>
@@ -251,7 +276,6 @@
         </section>
 
     </main>
-
 </div>
 
 <script src="script.js"></script>
