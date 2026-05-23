@@ -2,96 +2,149 @@ let chartNewton = null;
 let ultimoResultado = null;
 
 function mostrarSeccion(id, boton) {
-    document.querySelectorAll(".section").forEach(sec => {
+    const secciones = document.querySelectorAll(".section");
+    const botones = document.querySelectorAll(".menu-btn");
+    const seccionSeleccionada = document.getElementById(id);
+
+    if (!seccionSeleccionada) {
+        console.error("No existe la sección:", id);
+        return;
+    }
+
+    secciones.forEach(sec => {
         sec.classList.remove("active-section");
     });
 
-    document.querySelectorAll(".menu-btn").forEach(btn => {
+    botones.forEach(btn => {
         btn.classList.remove("active");
     });
 
-    document.getElementById(id).classList.add("active-section");
-    boton.classList.add("active");
+    seccionSeleccionada.classList.add("active-section");
 
-    if (id === "solver") {
-        calcularNewton();
+    if (boton) {
+        boton.classList.add("active");
     }
 }
 
 function abrirSolver() {
-    document.querySelectorAll(".section").forEach(sec => {
+    const secciones = document.querySelectorAll(".section");
+    const botones = document.querySelectorAll(".menu-btn");
+    const solver = document.getElementById("solver");
+
+    if (!solver) {
+        console.error("No existe la sección solver.");
+        return;
+    }
+
+    secciones.forEach(sec => {
         sec.classList.remove("active-section");
     });
 
-    document.querySelectorAll(".menu-btn").forEach(btn => {
+    botones.forEach(btn => {
         btn.classList.remove("active");
     });
 
-    document.getElementById("solver").classList.add("active-section");
-    document.querySelectorAll(".menu-btn")[1].classList.add("active");
+    solver.classList.add("active-section");
 
-    calcularNewton();
+    if (botones[1]) {
+        botones[1].classList.add("active");
+    }
+}
+
+function convertirSuperindices(expr) {
+    const mapa = {
+        "⁰": "0",
+        "¹": "1",
+        "²": "2",
+        "³": "3",
+        "⁴": "4",
+        "⁵": "5",
+        "⁶": "6",
+        "⁷": "7",
+        "⁸": "8",
+        "⁹": "9"
+    };
+
+    return expr.replace(/([x\d\)])([⁰¹²³⁴⁵⁶⁷⁸⁹]+)/g, function(_, base, sup) {
+        let numero = "";
+
+        for (let c of sup) {
+            numero += mapa[c];
+        }
+
+        return base + "^" + numero;
+    });
 }
 
 function prepararExpresion(expr) {
-    let e = expr.replace(/\s+/g, "");
+    let e = expr.toLowerCase();
 
-    // Reemplazar constantes primero (antes de renombrar funciones)
-    e = e.replace(/\bpi\b/g, "Math.PI");
-    // Reemplazar 'e' solo cuando está sola (no dentro de palabras como "exp", "sec", etc.)
-    e = e.replace(/(?<![a-zA-Z])e(?![a-zA-Z])/g, "Math.E");
+    e = e.replace(/\s+/g, "");
+    e = e.replace(/,/g, ".");
+    e = e.replace(/[−–—]/g, "-");
+    e = convertirSuperindices(e);
+    e = e.replace(/π/g, "pi");
 
-    // Reemplazar funciones matemáticas (orden importa: más largas primero)
-    e = e.replace(/\basin\b/g, "Math.asin");
-    e = e.replace(/\bacos\b/g, "Math.acos");
-    e = e.replace(/\batan\b/g, "Math.atan");
-    e = e.replace(/\bsinh\b/g, "Math.sinh");
-    e = e.replace(/\bcosh\b/g, "Math.cosh");
-    e = e.replace(/\btanh\b/g, "Math.tanh");
-    e = e.replace(/\bsin\b/g, "Math.sin");
-    e = e.replace(/\bcos\b/g, "Math.cos");
-    e = e.replace(/\btan\b/g, "Math.tan");
-    e = e.replace(/\bsqrt\b/g, "Math.sqrt");
-    e = e.replace(/\babs\b/g, "Math.abs");
-    e = e.replace(/\bexp\b/g, "Math.exp");
-    e = e.replace(/\blog10\b/g, "Math.log10");
-    e = e.replace(/\blog2\b/g, "Math.log2");
-    e = e.replace(/\blog\b/g, "Math.log");   // ln natural
-    e = e.replace(/\bln\b/g, "Math.log");
-    e = e.replace(/\bcbrt\b/g, "Math.cbrt");
-    e = e.replace(/\bsign\b/g, "Math.sign");
-    e = e.replace(/\bfloor\b/g, "Math.floor");
-    e = e.replace(/\bceil\b/g, "Math.ceil");
-    e = e.replace(/\bround\b/g, "Math.round");
-
-    // Multiplicación implícita: número seguido de x  →  número*x
-    // Ej: 2x → 2*x,  3.5x → 3.5*x
-    e = e.replace(/(\d+\.?\d*)(x)/g, "$1*$2");
-
-    // Multiplicación implícita: número seguido de (  →  número*(
-    // Ej: 2(x+1) → 2*(x+1)
-    e = e.replace(/(\d+\.?\d*)(\()/g, "$1*$2");
-
-    // Multiplicación implícita: ) seguido de x  →  )*x
-    // Ej: (x+1)x → (x+1)*x
-    e = e.replace(/(\))(x)/g, "$1*$2");
-
-    // Multiplicación implícita: x seguido de (  →  x*(
-    // Ej: x(x+1) → x*(x+1)
+    e = e.replace(/(\d)(x)/g, "$1*$2");
+    e = e.replace(/(\d)(\()/g, "$1*$2");
+    e = e.replace(/(x)(\d)/g, "$1*$2");
     e = e.replace(/(x)(\()/g, "$1*$2");
+    e = e.replace(/(\))(\()/g, "$1*$2");
+    e = e.replace(/(\))(x)/g, "$1*$2");
+    e = e.replace(/(\))(\d)/g, "$1*$2");
 
-    // Convertir potencias: ^ → **
-    e = e.replace(/\^/g, "**");
+    e = e.replace(/(\d)(sin|cos|tan|sqrt|log|ln|exp|abs)/g, "$1*$2");
+    e = e.replace(/(x)(sin|cos|tan|sqrt|log|ln|exp|abs)/g, "$1*$2");
+    e = e.replace(/(\))(sin|cos|tan|sqrt|log|ln|exp|abs)/g, "$1*$2");
+
+    e = e.replace(/(\d)(pi)/g, "$1*$2");
+    e = e.replace(/(x)(pi)/g, "$1*$2");
+    e = e.replace(/(\))(pi)/g, "$1*$2");
+
+    e = e.replaceAll("^", "**");
+
+    e = e.replace(/\bsin\(/g, "Math.sin(");
+    e = e.replace(/\bcos\(/g, "Math.cos(");
+    e = e.replace(/\btan\(/g, "Math.tan(");
+    e = e.replace(/\bsqrt\(/g, "Math.sqrt(");
+    e = e.replace(/\blog\(/g, "Math.log(");
+    e = e.replace(/\bln\(/g, "Math.log(");
+    e = e.replace(/\bexp\(/g, "Math.exp(");
+    e = e.replace(/\babs\(/g, "Math.abs(");
+
+    e = e.replace(/\bpi\b/g, "Math.PI");
+    e = e.replace(/(^|[+\-*/(])e(?=$|[+\-*/^)])/g, "$1Math.E");
 
     return e;
 }
 
 function evaluarFuncion(expr, x) {
     const expresion = prepararExpresion(expr);
-    try {
-        return Function("x", `return ${expresion}`)(x);
-    } catch (err) {
-        throw new Error(`Error al evaluar la expresión: "${expr}"\nExpresión procesada: "${expresion}"\n${err.message}`);
+    return Function("x", `"use strict"; return (${expresion})`)(x);
+}
+
+function limpiarResultadosVisuales() {
+    document.getElementById("tablaNewton").innerHTML = "";
+
+    document.getElementById("pasosNewton").innerHTML = `
+        <div class="step-empty">
+            Presiona <b>Calcular</b> para ver el desarrollo paso a paso.
+        </div>
+    `;
+
+    document.getElementById("resultadoRaiz").innerText = "x ≈ 0.000000";
+    document.getElementById("resIter").innerText = "0";
+    document.getElementById("resTol").innerText = "0";
+    document.getElementById("resError").innerText = "0.000000";
+    document.getElementById("estadoNewton").innerText = "Esperando cálculo";
+    document.getElementById("mensajeRaiz").innerText = "● Presiona calcular para mostrar la raíz aproximada.";
+    document.getElementById("mensajeTablaNewton").innerText = "★ Esperando cálculo.";
+
+    ultimoResultado = null;
+
+    if (chartNewton) {
+        chartNewton.destroy();
+        chartNewton = null;
     }
 }
 
@@ -110,11 +163,13 @@ function calcularNewton() {
     pasos.innerHTML = "";
 
     if (!funcion || !derivada || isNaN(x) || isNaN(tolerancia) || isNaN(maxIteraciones)) {
+        limpiarResultadosVisuales();
         alert("Completa todos los datos correctamente.");
         return;
     }
 
     if (tolerancia <= 0 || maxIteraciones <= 0) {
+        limpiarResultadosVisuales();
         alert("La tolerancia y el número máximo de iteraciones deben ser mayores que cero.");
         return;
     }
@@ -127,23 +182,34 @@ function calcularNewton() {
 
     for (let i = 0; i < maxIteraciones; i++) {
         let xi = x;
-        let fx, dfx;
+        let fx;
+        let dfx;
 
         try {
             fx = evaluarFuncion(funcion, xi);
             dfx = evaluarFuncion(derivada, xi);
         } catch (e) {
-            alert("La función o la derivada tienen un formato no válido.\n\n" + e.message);
+            limpiarResultadosVisuales();
+            alert(
+                "La función o la derivada tienen un formato no válido.\n\n" +
+                "Puedes escribir ejemplos como:\n" +
+                "2x - 2\n" +
+                "x^2 - 4\n" +
+                "2x^5 - 3x^2 + 2x\n" +
+                "10x^4 - 6x + 2"
+            );
             return;
         }
 
         if (!isFinite(fx) || !isFinite(dfx)) {
-            alert("La función ingresada produce valores no válidos (infinito o NaN) en x = " + xi.toFixed(6));
+            limpiarResultadosVisuales();
+            alert("La función ingresada produce valores no válidos.");
             return;
         }
 
         if (Math.abs(dfx) < 1e-12) {
-            alert("La derivada es cero o muy cercana a cero en x = " + xi.toFixed(6) + ". No se puede continuar.");
+            limpiarResultadosVisuales();
+            alert("La derivada es cero o muy cercana a cero. No se puede continuar.");
             return;
         }
 
@@ -240,25 +306,54 @@ function calcularNewton() {
     };
 }
 
+function obtenerRangoGrafica(raiz) {
+    let centro = isFinite(raiz) ? raiz : 0;
+
+    return {
+        minX: centro - 4,
+        maxX: centro + 4
+    };
+}
+
 function dibujarGrafica(funcion, raiz) {
     const ctx = document.getElementById("graficaNewton").getContext("2d");
 
     let datosFuncion = [];
     let puntoRaiz = [{ x: raiz, y: 0 }];
 
-    for (let i = -600; i <= 600; i++) {
+    const rango = obtenerRangoGrafica(raiz);
+
+    for (let i = rango.minX * 100; i <= rango.maxX * 100; i++) {
         const x = i / 100;
 
         try {
             const y = evaluarFuncion(funcion, x);
 
-            if (isFinite(y) && Math.abs(y) <= 20) {
+            if (isFinite(y) && Math.abs(y) <= 1000) {
                 datosFuncion.push({ x, y });
             }
         } catch (error) {
-            // Ignora puntos inválidos
+            // Ignorar puntos inválidos
         }
     }
+
+    let valoresY = datosFuncion.map(p => p.y);
+    let minY = Math.min(...valoresY, -5);
+    let maxY = Math.max(...valoresY, 5);
+
+    if (!isFinite(minY) || !isFinite(maxY)) {
+        minY = -5;
+        maxY = 5;
+    }
+
+    let margenY = (maxY - minY) * 0.15;
+
+    if (margenY === 0) {
+        margenY = 2;
+    }
+
+    minY -= margenY;
+    maxY += margenY;
 
     if (chartNewton) {
         chartNewton.destroy();
@@ -331,8 +426,8 @@ function dibujarGrafica(funcion, raiz) {
             scales: {
                 x: {
                     type: "linear",
-                    min: -3,
-                    max: 3,
+                    min: rango.minX,
+                    max: rango.maxX,
                     title: {
                         display: true,
                         text: "x",
@@ -350,13 +445,12 @@ function dibujarGrafica(funcion, raiz) {
                         }
                     },
                     ticks: {
-                        color: "#3a1a26",
-                        stepSize: 1
+                        color: "#3a1a26"
                     }
                 },
                 y: {
-                    min: -2,
-                    max: 2,
+                    min: minY,
+                    max: maxY,
                     title: {
                         display: true,
                         text: "f(x)",
@@ -374,8 +468,7 @@ function dibujarGrafica(funcion, raiz) {
                         }
                     },
                     ticks: {
-                        color: "#3a1a26",
-                        stepSize: 0.5
+                        color: "#3a1a26"
                     }
                 }
             }
@@ -396,28 +489,9 @@ function limpiarNewton() {
     document.getElementById("tolerancia").value = "";
     document.getElementById("iteraciones").value = "";
 
-    document.getElementById("tablaNewton").innerHTML = "";
-    document.getElementById("pasosNewton").innerHTML = `
-        <div class="step-empty">
-            Presiona <b>Calcular</b> para ver el desarrollo paso a paso.
-        </div>
-    `;
+    limpiarResultadosVisuales();
 
-    document.getElementById("resultadoRaiz").innerText = "x ≈ 0.000000";
-    document.getElementById("resIter").innerText = "0";
-    document.getElementById("resTol").innerText = "0";
-    document.getElementById("resError").innerText = "0.000000";
-    document.getElementById("estadoNewton").innerText = "Esperando cálculo";
-    document.getElementById("mensajeRaiz").innerText = "● Presiona calcular para mostrar la raíz aproximada.";
-    document.getElementById("mensajeTablaNewton").innerText = "★ Esperando cálculo.";
     document.getElementById("funcionLabel").innerText = "f(x) =";
-
-    ultimoResultado = null;
-
-    if (chartNewton) {
-        chartNewton.destroy();
-        chartNewton = null;
-    }
 }
 
 function exportarNewton() {
@@ -462,5 +536,5 @@ function exportarNewton() {
 }
 
 window.onload = function () {
-    // Inicia en la pantalla de Inicio.
+    mostrarSeccion("inicio", document.querySelector(".menu-btn"));
 };
