@@ -313,4 +313,3 @@ Además, el proyecto permitió integrar conocimientos de HTML, CSS, JavaScript y
 - Burden, R. L., & Faires, J. D. *Análisis numérico*.
 - Documentación oficial de Chart.js.
 - Material de clase sobre métodos numéricos.
-# M-todo-Newton-Raphson
