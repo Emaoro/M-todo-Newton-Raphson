@@ -188,7 +188,6 @@ body {
 .dashboard {
     display: grid;
     grid-template-columns: 300px minmax(600px, 1fr) 300px;
-    grid-template-rows: auto auto;
     gap: 22px;
     max-width: 1450px;
     margin: 0 auto;
@@ -411,13 +410,24 @@ body {
     grid-column: 1 / 3;
 }
 
+.table-wrapper {
+    overflow-x: auto;
+    overflow-y: auto;
+    max-height: 360px;
+    border-radius: 12px;
+}
+
 table {
     width: 100%;
     border-collapse: collapse;
+    min-width: 700px;
 }
 
 thead {
     background: #f8dfe6;
+    position: sticky;
+    top: 0;
+    z-index: 1;
 }
 
 th {
@@ -446,6 +456,81 @@ td {
     padding: 15px 18px;
     border-radius: 9px;
     font-weight: 600;
+}
+
+/* STEPS */
+
+.steps-card {
+    grid-column: 1 / 4;
+}
+
+.steps-intro {
+    color: var(--muted);
+    margin-bottom: 18px;
+    line-height: 1.6;
+}
+
+.steps-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
+    gap: 16px;
+}
+
+.step-empty {
+    grid-column: 1 / -1;
+    background: #fff8fa;
+    border: 1px dashed var(--wine-border);
+    border-radius: 12px;
+    padding: 18px;
+    color: var(--muted);
+}
+
+.step-box {
+    background: #fff8fa;
+    border: 1px solid #f0dbe2;
+    border-radius: 12px;
+    padding: 16px;
+    box-shadow: 0 6px 18px rgba(80, 0, 30, 0.06);
+}
+
+.step-box h4 {
+    color: var(--wine-dark);
+    margin-bottom: 10px;
+    font-size: 17px;
+}
+
+.step-list {
+    margin-left: 18px;
+    margin-bottom: 12px;
+}
+
+.step-list li {
+    margin: 5px 0;
+    line-height: 1.5;
+    color: var(--text);
+}
+
+.step-formula {
+    margin: 10px 0;
+    padding: 12px 14px;
+    background: #fff0f4;
+    border: 1px solid #edaabd;
+    border-radius: 10px;
+    color: var(--wine-dark);
+    font-weight: 600;
+    font-size: 14px;
+    overflow-x: auto;
+}
+
+.step-result {
+    margin-top: 10px;
+    padding: 12px 14px;
+    background: #f4fff6;
+    border: 1px solid #bde7c7;
+    border-radius: 10px;
+    color: #166534;
+    font-weight: 700;
+    line-height: 1.6;
 }
 
 /* HOME / INFO */
@@ -567,7 +652,8 @@ td {
     }
 
     .right-column,
-    .table-card {
+    .table-card,
+    .steps-card {
         grid-column: auto;
         grid-row: auto;
     }
