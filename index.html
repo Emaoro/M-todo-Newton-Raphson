@@ -1,0 +1,259 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Newton-Raphson Solver</title>
+
+    <link rel="stylesheet" href="style.css">
+
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/chartjs-plugin-zoom@2.0.1/dist/chartjs-plugin-zoom.min.js"></script>
+</head>
+<body>
+
+<div class="app">
+
+    <aside class="sidebar">
+        <div class="brand">
+            <div class="brand-logo">N</div>
+            <div>
+                <h2>Newton</h2>
+                <p>Raphson Solver</p>
+            </div>
+        </div>
+
+        <nav class="menu">
+            <button class="menu-btn active" onclick="mostrarSeccion('inicio', this)">⌂ Inicio</button>
+            <button class="menu-btn" onclick="mostrarSeccion('solver', this)">▣ Resolver</button>
+            <button class="menu-btn" onclick="mostrarSeccion('info', this)">ⓘ Información</button>
+        </nav>
+
+        <div class="side-card">
+            <div class="side-icon">▦</div>
+            <h3>Newton-Raphson</h3>
+            <p>Aplicación educativa para encontrar raíces de funciones no lineales.</p>
+        </div>
+    </aside>
+
+    <main class="main">
+
+        <header class="topbar">
+            <div>
+                <h1>Newton-Raphson Solver</h1>
+                <p>Método numérico para encontrar raíces de funciones</p>
+            </div>
+
+            <div class="top-icons">
+                <span>☀</span>
+                <span>?</span>
+                <span>☰</span>
+            </div>
+        </header>
+
+        <!-- INICIO -->
+        <section id="inicio" class="section active-section">
+            <div class="welcome-card">
+                <h2>Propuesta de automatización</h2>
+
+                <p>
+                    Esta aplicación automatiza el método de Newton-Raphson normal,
+                    permitiendo encontrar raíces aproximadas de funciones no lineales
+                    mediante un proceso iterativo.
+                </p>
+
+                <div class="home-grid">
+                    <div class="home-card">
+                        <h3>Método Newton-Raphson</h3>
+                        <p>
+                            El usuario ingresa la función, su derivada, el valor inicial,
+                            la tolerancia y el número máximo de iteraciones.
+                        </p>
+                        <button onclick="abrirSolver()">Abrir método</button>
+                    </div>
+
+                    <div class="home-card">
+                        <h3>Resultado paso a paso</h3>
+                        <p>
+                            La aplicación muestra la tabla de iteraciones, el error,
+                            la raíz aproximada y la gráfica de la función.
+                        </p>
+                    </div>
+                </div>
+
+                <div class="home-info">
+                    <h3>¿Qué realiza la aplicación?</h3>
+                    <p>
+                        Calcula automáticamente cada iteración del método Newton-Raphson
+                        usando la fórmula:
+                    </p>
+
+                    <div class="home-formula">
+                        xₙ₊₁ = xₙ − f(xₙ) / f'(xₙ)
+                    </div>
+
+                    <p>
+                        Al finalizar, muestra si el método logró converger según la tolerancia ingresada.
+                    </p>
+                </div>
+            </div>
+        </section>
+
+        <!-- RESOLVER -->
+        <section id="solver" class="section">
+
+            <div class="dashboard">
+
+                <div class="card input-card">
+                    <h3>▧ Datos de entrada</h3>
+
+                    <label>Función f(x)</label>
+                    <input type="text" id="funcion" value="x^3 - x - 2">
+
+                    <label>Derivada f'(x)</label>
+                    <input type="text" id="derivada" value="3*x^2 - 1">
+
+                    <label>Valor inicial x₀</label>
+                    <input type="number" id="x0" value="1.5" step="any">
+
+                    <label>Tolerancia ε</label>
+                    <input type="number" id="tolerancia" value="0.00001" step="any">
+
+                    <label>Máximo de iteraciones</label>
+                    <input type="number" id="iteraciones" value="25">
+
+                    <button class="btn-primary" onclick="calcularNewton()">▶ Calcular</button>
+
+                    <div class="btn-row">
+                        <button onclick="limpiarNewton()">⟳ Limpiar</button>
+                        <button onclick="exportarNewton()">⇩ Exportar</button>
+                    </div>
+                </div>
+
+                <div class="card graph-card">
+                    <div class="card-title-row">
+                        <h3>⌁ Gráfica de la función</h3>
+
+                        <div class="graph-actions">
+                            <span id="funcionLabel">f(x) = x^3 - x - 2</span>
+                            <button onclick="resetearGrafica()">Restablecer vista</button>
+                        </div>
+                    </div>
+
+                    <div class="chart-container">
+                        <canvas id="graficaNewton"></canvas>
+                    </div>
+
+                    <div class="graph-help">
+                        Puedes mover la gráfica arrastrando con el mouse y hacer zoom con la rueda.
+                    </div>
+
+                    <div class="alert-box" id="mensajeRaiz">
+                        ● Presiona calcular para mostrar la raíz aproximada.
+                    </div>
+                </div>
+
+                <div class="right-column">
+
+                    <div class="card result-card">
+                        <h3>♕ Resultado</h3>
+
+                        <div class="result-box">
+                            <p>✔ Raíz aproximada</p>
+                            <h2 id="resultadoRaiz">x ≈ 0.000000</h2>
+                            <span>f(x) ≈ 0</span>
+                        </div>
+
+                        <div class="result-details">
+                            <p>Iteraciones realizadas: <b id="resIter">0</b></p>
+                            <p>Tolerancia: <b id="resTol">0</b></p>
+                            <p>Error final: <b id="resError">0.000000</b></p>
+                            <p>Estado:</p>
+                            <span class="badge" id="estadoNewton">Esperando cálculo</span>
+                        </div>
+                    </div>
+
+                    <div class="card formula-card">
+                        <h3>▤ Fórmula del método</h3>
+
+                        <div class="formula">
+                            xₙ₊₁ = xₙ − f(xₙ) / f'(xₙ)
+                        </div>
+
+                        <p><b>Donde:</b></p>
+                        <ul>
+                            <li>xₙ = Aproximación actual</li>
+                            <li>f(xₙ) = Valor de la función</li>
+                            <li>f'(xₙ) = Valor de la derivada</li>
+                        </ul>
+                    </div>
+
+                </div>
+
+                <div class="card table-card">
+                    <h3>▤ Iteraciones Newton-Raphson</h3>
+
+                    <table>
+                        <thead>
+                        <tr>
+                            <th>Iteración</th>
+                            <th>xᵢ</th>
+                            <th>f(xᵢ)</th>
+                            <th>f'(xᵢ)</th>
+                            <th>xᵢ₊₁</th>
+                            <th>Error</th>
+                        </tr>
+                        </thead>
+                        <tbody id="tablaNewton"></tbody>
+                    </table>
+
+                    <div class="success-box" id="mensajeTablaNewton">
+                        ★ Esperando cálculo.
+                    </div>
+                </div>
+
+            </div>
+        </section>
+
+        <!-- INFORMACIÓN -->
+        <section id="info" class="section">
+            <div class="welcome-card">
+                <h2>Información del proyecto</h2>
+
+                <div class="text-block">
+                    <h3>Trabajo especial</h3>
+                    <p>
+                        Proyecto de Métodos Numéricos para la Ingeniería enfocado en la
+                        automatización del método de Newton-Raphson normal.
+                    </p>
+
+                    <h3>Objetivo</h3>
+                    <p>
+                        Automatizar el cálculo de raíces aproximadas de funciones no lineales
+                        mediante el método Newton-Raphson, mostrando procedimiento, tabla,
+                        error, resultado final y gráfica.
+                    </p>
+
+                    <h3>Modelo matemático</h3>
+                    <p>
+                        El método Newton-Raphson utiliza una aproximación inicial para obtener
+                        valores cada vez más cercanos a la raíz de una función.
+                    </p>
+
+                    <h3>Bibliografía sugerida</h3>
+                    <ul>
+                        <li>Chapra, S. C., & Canale, R. P. Métodos Numéricos para Ingenieros.</li>
+                        <li>Burden, R. L., & Faires, J. D. Análisis Numérico.</li>
+                        <li>Nakamura, S. Métodos Numéricos Aplicados con Software.</li>
+                    </ul>
+                </div>
+            </div>
+        </section>
+
+    </main>
+
+</div>
+
+<script src="script.js"></script>
+</body>
+</html>
